@@ -181,9 +181,11 @@ As mental health conditions continue to increase worldwide, development and impr
 
 This report focuses on developers^[The term "developer" is defined as people who code] and explores the factors that may contribute to their satisfaction with their current job (or the job they currently spend the most time on) through a survey conducted by Stack Overflow. More information regarding the survey can be found in Section \@ref(data) and Section \@ref(results) This report investigates factors such as work location, gender, experience as a developer, compensation, etc, and their influence on the developers' job satisfaction.
 
-This report identifies several factors that are significant factors on the developers job satisfaction. In Section \@ref(results), the report discovers that there is a slight decrease in job satisfaction for developers who identify as non-binary, gender queer, or gender non-conforming and developers who work mostly in offices compared to working from home. Furthermore, there is a great positive association between overall career satisfaction and job satisfaction. The results also show developers with a slightly higher compensation or a smaller company size are more likely to be satisfied with their jobs.
+This report identifies several factors that are significant factors in the developers’ job satisfaction. In Section \@ref(results), the report discovers that there is a slight decrease in job satisfaction for developers who identify as non-binary, genderqueer, or gender non-conforming and developers who work mostly in offices compared to working from home. Furthermore, there is a great positive association between overall career satisfaction and job satisfaction. The results also show developers with slightly higher compensation or smaller company size are more likely to be satisfied with their jobs.
 
-With these significant factors in mind, companies can direct their attention and resources to these factors and improve on their employee's work life balance. This would greatly help developer's mental health and ease the transition due to the Covid-19 Pandemic.
+With these significant factors in mind, companies can direct their attention and resources to these factors and improve their employee's work-life balance. This would greatly help the developer's mental health and ease the transition due to the Covid-19 Pandemic.
+
+
 
 
 
@@ -197,9 +199,11 @@ Using R Statistical Programming Language [@citeR], the packages dpylr[@dplyr], t
 
 ## Source
 
-The 2019 StackOverflow Developer’s Survey is a survey that was conducted by StackOverflow, an online public platform that allows users to ask and answer questions [@sofsurvey].  The StackOverflow Developer’s survey is one of the largest and most comprehensive surveys conducted annually to gain insight of the developers’ favorite technological tools, such as programming languages and frameworks, to their job status and satisfaction, and this survey has been conducted since 2010, making the 2019 edition the ninth year of this survey. The survey obtained 88,883 responses from 179 different countries all around the world. Approximately 400 responses were discarded from the survey as the respondents spend less than 3 minutes completing the survey, which was expected to take respondents around 20 minutes to complete and the median of the time spent on the survey for qualified responses was 23.2 minutes.
+The 2019 StackOverflow Developer’s Survey is a survey that was conducted by StackOverflow, an online public platform that allows users to ask and answer questions [@sofsurvey].  The StackOverflow Developer’s survey is one of the largest and most comprehensive surveys conducted annually to gain insight into the developers’ favorite technological tools, such as programming languages and frameworks, to their job status and satisfaction, and this survey has been conducted since 2010, making the 2019 edition the ninth year of this survey. The survey obtained 88,883 responses from 179 different countries all around the world. Approximately 400 responses were discarded from the survey as the respondents spend less than 3 minutes completing the survey, which was expected to take respondents around 20 minutes to complete and the median of the time spent on the survey for qualified responses was 23.2 minutes.
 
 This survey was open to responses from January 23 to February 14 and it is accessible through multiple media such as banner ads, blog posts, email lists, etc. As these medians are all owned by StackOverflow, they have noted that it is possible that the respondents to this survey are more likely to be highly engaged and active users on StackOverflow as they are more likely to notice the survey and begin. Furthermore, as an incentive for users to respond to this survey, StackOverflow has offered badges upon completion of the survey to the user's profile. 
+
+
 
 ```{r tab1, warning=FALSE, fig.cap="Respondent Country Distribution", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
 ## EDA COUNTRY
@@ -290,7 +294,6 @@ The distributions of these variables can be seen in Figures \@ref(fig:fig1). We 
 
 As the response variable, this report is attempting to model is the variable JobSat, and that it has been transformed into a binary variable as described in Section \@ref(data), the use of Binary Logistic Regression is suitable in this situation. Using the variables WorkLoc, WorkRemote, CareerSat, and OrgSize as predictors with the transformation described above, the model assumes:
 
-	[MODEL HERE]
 $$  P(Y | X) = \frac{1}{1 + e^{-(B_0 + B_1x_1 + B_2x_2 + B_3x_3 + B_4x_4)}} = \frac{1}{1+e^{-(\text{WorkLoc} \cdot x_1 + \text{WorkRemote} \cdot x_2 + \text{CareerSat} \cdot x_3 + \text{OrgSize} \cdot x_4)}}  $$
 	
 	
@@ -359,18 +362,21 @@ grid.arrange(d1, d2, d3, d4, ncol=2, nrow=2)
 
 The data is first simulated by using the library broom's augment function. It is then fed into the model for prediction and diagnostics.
 
-After feeding in the simulated data into the binary logistic regression, the residual are plotted to verify the model.
+After feeding the simulated data into the binary logistic regression, the residuals are plotted to verify the model.
 
-In Figure \@ref(fig:fig2), it shows the models residuals distribution and the residuals vs. each predictor variables. From the histogram on the top left plot, it shows that the residuals are approximately normally distributed. Furthermore, in the top right plot and bottom left plot, the residuals plotted against the predictor variables Preferred Work Location and Company Size showed that there are no relationship between the residuals and the predictor variables. The residuals seems to be scattered all around without a particular pattern. 
+Figure \@ref(fig:fig2) shows the model's residuals distribution and the residuals vs. each predictor variable. From the histogram on the top left plot, it shows that the residuals are approximately normally distributed. Furthermore, in the top-right plot and bottom left plot, the residuals plotted against the predictor variables Preferred Work Location and Company Size showed that there is no relationship between the residuals and the predictor variables. The residuals seem to be scattered all around without a particular pattern. 
 
-Finally, the bottom right plot shows the estimated job satisfaction probability plotted against the actual job satisfaction value in the dataset. The line $y = x$ is plotted as the solid black line to provide information on the ideal predictions are. In the plot, there are many points close to the ideal line, located in the bottom left corner and the top right corner. However, there are also many points that lie far away from the line. As the scattered plot is difficult to interpret the percentage of incorrect predictions due to a relatively large dataset, further investigations are conducted to show the actual performance of the model.
+Finally, the bottom right plot shows the estimated job satisfaction probability plotted against the actual job satisfaction value in the dataset. The line $y = x$ is plotted as the solid black line to provide information on the ideal predictions. In the plot, there are many points close to the ideal line, located in the bottom left corner and the top right corner. However, there are also many points that lie far away from the line. As the scattered plot is difficult to interpret the percentage of incorrect predictions due to a relatively large dataset, further investigations are conducted to show the actual performance of the model.
 
 This report will explore each of the independent variables in Section \@ref(results) to visualize the relationship between each variable and the dependent variable job satisfaction.
 
 
+
+
 # Results
 
-This report first focuses on exploring the relationship between each variable with the variable JobSat. This is done by producing bar graphs using ggplot[@citeggplot2] with the transformed data. These graphs are meant to provide a better understanding of how influential these variables are to the developers’ satisfaction of their occupation in hopes of helping us interpret and explain the Logistic Regression model that is produced.
+This report first focuses on exploring the relationship between each variable with the variable JobSat. This is done by producing bar graphs using ggplot[@citeggplot2] with the transformed data. These graphs are meant to provide a better understanding of how influential these variables are to the developers’ satisfaction with their occupation in hopes of helping us interpret and explain the Logistic Regression model that is produced.
+
 
 
 ```{r fig3, warning=FALSE, fig.cap="Job Satisfaction and Preferred Work Location", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
@@ -387,7 +393,7 @@ factorized %>% ggplot(aes(x= as.factor(sat_desc),  group=location_desc)) +
 
 ```
 
-From Figure \@ref(fig:fig3), we can see that 23.6% of the people who prefer working at home are not satisfied with their current jobs. There is a slight decrease in dissatisfaction in people who prefer working in an office with 18.1% dissatisfied with their current job status. Finally, there is a noticeably large proportion of 30.8% people who prefer working at a co-working space who are not satisfied with their jobs.
+From Figure \@ref(fig:fig3), we can see that 23.6% of the people who prefer working at home are not satisfied with their current jobs. There is a slight decrease in dissatisfaction in people who prefer working in an office with 18.1% dissatisfied with their current job status. Finally, there is a noticeably large proportion of 30.8% of people who prefer working at a co-working space who are not satisfied with their jobs.
 
 
 ```{r fig4, warning=FALSE, fig.cap="Job Satisfaction and Career Satisfaction", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
@@ -401,7 +407,7 @@ factorized %>% filter(!is.na(satisfy), !is.na(careersatisfy)) %>% ggplot(aes(x= 
   scale_y_continuous(labels = scales::percent) + theme(legend.position="none") + scale_fill_brewer(palette = "RdGy")
 ```
 
-From Figure \@ref(fig:fig4), there is a clear relationship between career and job satisfaction. 80.7% the people who are unsatisfied with their career are also unsatisfied with their current job and 88.9% of the people who are satisfied with their career are also satisfied with their current job.
+From Figure \@ref(fig:fig4), there is a clear relationship between career and job satisfaction. 80.7% of the people who are unsatisfied with their career are also unsatisfied with their current job and 88.9% of the people who are satisfied with their career are also satisfied with their current job.
 
 ```{r fig5, warning=FALSE, fig.cap="Job Satisfaction and Remote Work", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
 
@@ -416,7 +422,7 @@ factorized %>% filter(!is.na(satisfy), !is.na(careersatisfy)) %>% ggplot(aes(x= 
   scale_y_continuous(labels = scales::percent) + theme(legend.position="none") + scale_fill_brewer(palette = "RdGy")
 ```
 
-From Figure \@ref(fig:fig5), it shows that 21.5% of the people who do not work remotely more than half of the time in their job are unsatisfied with their current occupation and 18.2% of the people who work remotely more than half of the time in their job are unsatisfied with their current occupation.
+From Figure \@ref(fig:fig5), it shows that 21.5% of the people who do not work remotely more than half of the time in their job are unsatisfied with their current occupation, and 18.2% of the people who work remotely more than half of the time in their job are unsatisfied with their current occupation.
 
 
 
@@ -468,9 +474,12 @@ The fitted logistic regression model’s coefficient can be found in table \@ref
 
 Since it is a logistic regression model, the coefficients are exponentiated to provide a clearer description of the model.
 
-It follows that the coefficient represents the logits of when the variable is true for binary variables, such as careersatisfy, WorkLocOffice, WorkLocOther place, and remote. and for discrete variables such as Compsize, the coefficients represent the amount of logits increased as the variable increases in 1 unit.
+It follows that the coefficient represents the logits of when the variable is true for binary variables, such as careersatisfy, WorkLocOffice, WorkLocOther place, and remote. and for discrete variables such as Compsize, the coefficients represent the number of logits increased as the variable increases in 1 unit.
 
-Invesgitating further, we found that the p-values for each of the predictors were all small and less than 0.001. This shows that each of the predictors are statistically significant when estimating the dependent variable, job satisfaction.
+Investigating further, we found that the p-values for each of the predictors were all small and less than 0.001. This shows that each of the predictors is statistically significant when estimating the dependent variable, job satisfaction.
+
+
+
 
 ```{r fig6, warning=FALSE, fig.cap="Predicted vs Actual Job Satisfaction grouped by Preferred Work Location", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
 # # Model Diagnostics
@@ -497,7 +506,9 @@ Using the simulated data set, we then conduct tests on our model to interpret th
 
 Observing the plot, we can see that our model separates the simulated data well as the points with an actual job satisfaction value of 1 mostly have a predicted value close to 1, and the points with an actual job satisfaction value of 0 mostly have a predicted value close to 0. 
 
-There are of course a few exceptions that lie within the wrong desired region. However, due to a large simulated data size, we are unable to fully interpret the false positives (actual value of 0 with a predicted value close to 1) and the false negatives (actual value of 1 with a predicted value close to 0) of our predictions.
+There are of course a few exceptions that lie within the wrong desired region. However, due to the large simulated data size, we are unable to fully interpret the false positives (the actual value of 0 with a predicted value close to 1) and the false negatives (the actual value of 1 with a predicted value close to 0) of our predictions.
+
+
 
 
 ```{r fig7, warning=FALSE, fig.cap="ROC Curve", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
@@ -548,9 +559,10 @@ sensitivity %>%
 
 
 
-We first processed the predicted values with a cutoff threshold of 0.5 as indicated in the ROC Curve, meaning that predicted values greater than 0.5 are considered as 1 and predicted values less than or equal to 0.5 are considered as 0. Then we calculated the True Positives (TP), True Negatives (TN), False Positives (FP), and False Negatives (FN).
+We first processed the predicted values with a cutoff threshold of 0.5 as indicated in the ROC Curve, meaning that predicted values greater than 0.5 are considered 1, and predicted values less than or equal to 0.5 are considered 0. Then we calculated the True Positives (TP), True Negatives (TN), False Positives (FP), and False Negatives (FN).
 
-The sensitivity, specificity, and accuracy are calculated according to the following formuals:
+The sensitivity, specificity, and accuracy are calculated according to the following formulas:
+
 
 $$ \text{sensitivity} = \frac{TP}{TP + FN}$$
 $$ \text{specificity} = \frac{TN}{TN + FP}$$
@@ -564,54 +576,65 @@ From Table \@ref(tab:tab4), the overall sensitivity is around 0.97, the specific
 
 
 ## Model Interpretation and Analysis
-model interpretation, sensitivity analysis, simulated outcome analysis
 
-From Table \@ref(tab:tab2), we see a list of coefficients associated with each predictor variable. Most notably, we can see that the variable CareerSatisfy has a large impact on the respondent's current job satisfaction as it has a exponentiated coefficient of approximately 30. other more influential factors are WorkLocOffice and remote, with a coefficient of approximately 1.7. Other smaller influential factors are WorkLocOther and Compsize, which only have a coefficient of less than 1. Furthermore, we observe that all of the predictor values are statistically significant with a p-value of less than 0.001. This means that each of these predictors are influential in the job satisfaction of the individual. Therefore, from the coefficients, we can easily observe the influential ranking of each predictors.
+From Table \@ref(tab:tab2), we see a list of coefficients associated with each predictor variable. Most notably, we can see that the variable CareerSatisfy has a large impact on the respondent's current job satisfaction as it has an exponentiated coefficient of approximately 30. other more influential factors are WorkLocOffice and remote, with a coefficient of approximately 1.7. Other smaller influential factors are WorkLocOther and Compsize, which only have a coefficient of less than 1. Furthermore, we observe that all of the predictor values are statistically significant with a p-value of less than 0.001. This means that each of these predictors is influential in the job satisfaction of the individual. Therefore, from the coefficients, we can easily observe the influential ranking of each predictor.
 
 From Table \@ref(tab:tab4) and Figure \@ref(fig:fig7), we see that our model was able to achieve a relatively high sensitivity rate of 0.97. This means that our model performs well in predicting the respondents being satisfied with their jobs. However, we have obtained a mediocre specificity rate of 0.54. This shows that our model does not perform well in predicting the respondents being unsatisfied with their jobs.
 
 From Figure \@ref(fig:fig6) and Table \@ref(tab:tab4), with an accuracy of 0.87, we can now explain that our plot for simulated results is showing a correct visualization of our predictions, with most of the points lying close to their actual value. 
 
+
+
+
 ## Preferred Work Location
 
-From Figure \@ref(fig:fig3), it can easily be identified that respondents who prefer to work at other places such as a coworking space have a higher unsatisfied proportion. After investigating the cleaned data, we have found several explanations to this phenomenon. 
+From Figure \@ref(fig:fig3), it can easily be identified that respondents who prefer to work at other places such as a coworking space have a higher unsatisfied proportion. After investigating the cleaned data, we have found several explanations for this phenomenon. 
 
-The number of observations where respondents respondent with preferring "Others, such as a coworking space" work location only consist of approximately 8% of the entire dataset. This is considerably small seeing as there is only 3 options for this variable to choose from. This may lead to unknown sampling bias or other external factors underlying each respondents responses. 
+The number of observations where respondents with preferring "Others, such as a coworking space" work location only consist of approximately 8% of the entire dataset. This is considerably small seeing as there are only 3 options for this variable to choose from. This may lead to unknown sampling bias or other external factors underlying each respondent's responses. 
 
-This report proposes to transform this question in the survey from a single choice to multiple choice. We believe that this will not only increase the number of responses choosing this option, but also gain more information on reach respondent's ranking of their preferred working location. With this extra option, more information may be inferred from each responses by grouping each respondents top choices category such as grouping "Home" and "Coworking space" as "Out of Office" or "Non restricted work space."
+This report proposes to transform this question in the survey from a single choice to multiple choice. We believe that this will not only increase the number of responses choosing this option but also gain more information on reaching respondents' ranking of their preferred working location. With this extra option, more information may be inferred from each response by grouping each respondent's top choices category such as grouping "Home" and "Coworking space" as "Out of Office" or "Non-restricted workspace."
 
-Furthermore, this report also encourages future reports to perform resampling orsimulate more data with the options "Others" as their preferred working location in attempt to reduce potential biased results or to verify that the responses in this survey accurately portrays the notion of people choosing "Others" as their preferred working location are more likely to be unsatisfied with their current location. 
+Furthermore, this report also encourages future reports to perform resampling or simulate more data with the option "Others" as their preferred working location in an attempt to reduce potentially biased results or to verify that the responses in this survey accurately portray the notion of people choosing "Others" as their preferred working location are more likely to be unsatisfied with their current location. 
 
-From another survey conducted by Slack, a online business communication platform, they found that 72% of the people prefer a hybrid mode of working location.[@slack] This shows that people are more likely to prefer a wide range of working locations to choose from. With this, we believe that many respondents who chooses "Others" may have similar mindset of wanting to have multiple working locations. COnsequently, if these respondents currently work in office but prefer a different working location, they are more likely to be unsatisfied with their current occupations.
+From another survey conducted by Slack, an online business communication platform, they found that 72% of the people prefer a hybrid model of working location.[@slack] This shows that people are more likely to prefer a wide range of working locations to choose from. With this, we believe that many respondents who choose "Others" may have a similar mindset of wanting to have multiple working locations. Consequently, if these respondents currently work in an office but prefer a different working location, they are more likely to be unsatisfied with their current occupations.
 
-Therefore, this result informs that the worker's location preference is extremely important and that if developers have their freedom in choosing whether or not they want to go into the office to work, they are more likely to be satisfied with their jobs.
+Therefore, this result informs that the worker's location preference is extremely important and that if developers have the freedom in choosing whether or not they want to go into the office to work, they are more likely to be satisfied with their jobs.
+
+
+
 
 
 
 
 ## Impactful Factors
 
-From Figure \@ref(fig:fig5), we see that there is a slight increase in job dissatisfaction rate for people who are not working remote more than half of their time. A similar trend can be found in the model in Table \@ref(tab:tab2) where the coefficient for remote has a logit of 1.7 with a statistically significant p-value. This coefficient shows that the satisfaction rate will increase if the respondent works more than half of their time on their job. 
+From Figure \@ref(fig:fig5), we see that there is a slight increase in the job dissatisfaction rate for people who are not working remotely more than half of their time. A similar trend can be found in the model in Table \@ref(tab:tab2) where the coefficient for remote has a logit of 1.7 with a statistically significant p-value. This coefficient shows that the satisfaction rate will increase if the respondent works more than half of their time on their job. 
 
-This finding aligns with the article that Apollo Technical posted. [@apollo] In this article, they have analyzed the survey conducted by the Becker Friedman Institute for Economics at the University of Chicago, which sampled over 10,000 respondents regarding their work status such as remote work, and their feelings about it. They have reported that over 22% of the workers are happier when transitioning to remote work compared to those workers who always work in an onsite office environment. They also reported that these remote workers feel less stress, better focus, and better overall productivity when working remotely despite the fact that these remote workers worked over 43% more overtimes compared to onsite workers. 
+This finding aligns with the article that Apollo Technical posted. [@apollo] In this article, they have analyzed the survey conducted by the Becker Friedman Institute for Economics at the University of Chicago, which sampled over 10,000 respondents regarding their work status such as remote work, and their feelings about it. They have reported that over 22% of the workers are happier when transitioning to remote work compared to those workers who always work in an onsite office environment. They also reported that these remote workers feel less stress, better focus, and better overall productivity when working remotely despite the fact that these remote workers worked over 43% more over time compared to onsite workers. 
 
-This links to an article by ZDNet, where they surveyed and investigated developers in attempt to pin point the important factors that makes a developer wanting to stay in their job[@zdnet]. In this article, they have reported a surprising result that the compensation was not in the top 3 important factors. Normally, one great incentive for workers is the compensation as it offers them more financial freedom and a quantified measure for their recognition and importance to the team [@quartz]. 
+This links to an article by ZDNet, where they surveyed and investigated developers in an attempt to pinpoint the important factors that make a developer want to stay in their job[@zdnet]. In this article, they have reported a surprising result that the compensation was not in the top 3 important factors. Normally, one great incentive for workers is the compensation as it offers them more financial freedom and a quantified measure of their recognition and importance to the team [@quartz]. 
 
-This also reflects to the analysis in this report. In the early stages of investigating, this report finds that the compensation amount reported for developers is not associated to minute association with the developer's job satisfaction. Furthermore, the convertedcomp variable, which holds the value of the developer's salary converted into United States Dollars, was not even statistically significant when taking as a predictor variable in a Logistic Regression Model. 
+This is also reflected in the analysis in this report. In the early stages of investigating, this report finds that the compensation amount reported for developers is not associated with minute association with the developer's job satisfaction. Furthermore, the ConvertedComp variable, which holds the value of the developer's salary converted into United States Dollars, was not even statistically significant when taken as a predictor variable in a Logistic Regression Model. 
 
-Furthermore, the article by ZDNet also reported that productivity and a stable work-life balance was the most influential factors that is keeping developers in their current occupation. This is expected as our model also have shown that preferred work location and working setting is influential in terms of determining the developer's job satisfaction. 
+Furthermore, the article by ZDNet also reported that productivity and a stable work-life balance were the most influential factors that are keeping developers in their current occupations. This is expected as our model also has shown that preferred work location and the working setting are influential in terms of determining the developer's job satisfaction. 
 
-Overall, as contrarary to popular belief, the most important factor for developers' in their occupation is not their overall compensation, but instead their work-life balance and their ability to make an impact. 
+Overall, as contrary to popular belief, the most important factor for developers' in their occupation is not their overall compensation, but instead their work-life balance and their ability to make an impact. 
+
+
+
 
 
 ## Weaknesses and next steps
 
 
-This report and survey undoubtedly have areas to improve in to obtain a more comprehensive view of the developer's job satisfaction factors. The distribution of each responses as seen in Section \@ref(data) may pose as a threat to our analysis.
+This report and survey undoubtedly have areas to improve in to obtain a more comprehensive view of the developer's job satisfaction factors. The distribution of each response as seen in Section \@ref(data) may pose a threat to our analysis.
 
 As mentioned in Section 5.2, there are several ways proposed to improve the survey. Methods have also been proposed in the same section to account for the lack of samples in certain responses. 
 
-Despite these shortcomings, this report managed to identify some key aspects of a developer's job that would improve the livelihood of the developer. Work setting flexibility and the option of remote work, in this report, acts as the greatest influential factor. Incorporating several existing articles, this report verifies their claims and reinforces the importance of these factors. Thus, corporations who wishes to improve their working standards and provide a happier working environment for their employees are encouraged to follow the guidelines in this report and hopefully make working easier and happier for developers.
+Despite these shortcomings, this report managed to identify some key aspects of a developer's job that would improve the livelihood of the developer. Work setting flexibility and the option of remote work, in this report, acts as the greatest influential factor. Incorporating several existing articles, this report verifies their claims and reinforces the importance of these factors. Thus, corporations who wish to improve their working standards and provide a happier working environment for their employees are encouraged to follow the guidelines in this report and hopefully make working easier and happier for developers.
+
+
+
 
 
 
