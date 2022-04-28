@@ -97,7 +97,7 @@ Extract of the questions from @gebru2021datasheets
 1. *Was any preprocessing/cleaning/labeling of the data done (for example, discretization or bucketing, tokenization, part-of-speech tagging, SIFT feature extraction, removal of instances, processing of missing values)? If so, please provide a description. If not, you may skip the remaining questions in this section.*
 	- Yes, missing values were removed. Neutral responses were also treated as missing values and removed.
 2. *Was the "raw" data saved in addition to the preprocessed/cleaned/labeled data (for example, to support unanticipated future uses)? If so, please provide a link or other access point to the "raw" data.*
-	- Yes, the raw data is accessible on https://stackoverflow.com/users/prediction-data?_ga=2.188917099.1567384284.1650887000-373250572.1643712221
+	- Yes, the raw data is accessible on https://insights.stackoverflow.com/survey
 3. *Is the software that was used to preprocess/clean/label the data available? If so, please provide a link or other access point.*
 	- Yes, the software used to preprocess/clean the data is R. It is accessible on https://www.r-project.org/
 4. *Any other comments?*

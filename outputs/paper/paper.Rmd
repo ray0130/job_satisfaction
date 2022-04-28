@@ -3,7 +3,7 @@ title: "Happy Developer Happy Company"
 subtitle: "An analysis of the Stack Overflow Developer's Survey"
 author: 
   - Ray Wen
-thanks: "Code and data are available at: ."
+thanks: "Code and data are available at: https://github.com/ray0130/job_satisfaction"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 abstract: "In light of the Covid-19 pandemic, there have been many shifts in everyone's lifestyle and work-life balance which caused a rise in mental illness as addressed by the World Health Organization. This report analyzes the 2019 StackOverflow Developer's Survey and focuses on the factors influencing job satisfaction amongst developers. Factors such as gender, company size, work location, career satisfaction, and compensation are identified as significant factors that influence the developer's job satisfaction. Companies can utilize this information to reinforce and reallocate company resources to address employees who fit these brackets and improve their overall job satisfaction and mental health.\\par \\textbf{Keywords:} Job Satisfaction, Mental Health, Developer, Survey"
 output:
@@ -192,7 +192,7 @@ With these significant factors in mind, companies can direct their attention and
 
 In order to gain a better understanding of developers’ job satisfaction, this report considers the 2019 StackOverflow Developer’s Survey and attempts to identify key factors that make them satisfied with their current occupation. Furthermore, the survey from the year 2019 was selected as it contains more variables of interest such as “Work remote” and “Work Location” variables that identify the set of the developer’s workspace. Utilizing the 2019 data that was conducted prior to the Covid-19 pandemic also provides a better distribution of the working location as the pandemic has shifted working locations from the usual office to mostly remote work [@sofsurvey]. 
 
-Using R Statistical Programming Language [@citeR], the packages dpylr[@dplyr], tidyverse[@citetidyverse], hrbrthemes[@theme], and broom[@broom], this report is able to conduct exploratory analysis and fit a logistic regression model, categorizing the characteristics of developers who are satisfied with their jobs and those who are not. Furthermore, data visualizations, such as tables and graphs are made by using ggplot2 [@citeggplot2], modelsummary[@modelsummary], gridExtra[@gridExtra], and kableExtra[@kableExtra]. Finally, the report was compiled using knitr [@citeknitr]
+Using R Statistical Programming Language [@citeR], the packages dpylr[@dplyr], tidyverse[@citetidyverse], hrbrthemes[@theme], and broom[@broom], this report is able to conduct exploratory analysis and fit a logistic regression model, categorizing the characteristics of developers who are satisfied with their jobs and those who are not. Furthermore, data visualizations, such as tables and graphs are made by using ggplot2 [@citeggplot2], modelsummary[@modelsummary], gridExtra[@gridExtra], and kableExtra[@kableExtra]. Finally, the report was compiled using knitr [@citeknitr].
 
 
 ## Source
@@ -241,7 +241,7 @@ Furthermore, StackOverflow also highlighted that, although they continue to impr
 
 ## Variable of Interest
 
-This report focuses on several variables included in the survey in hopes of extracting vital information and building a comprehensive model for identifying factors contributing to developers’ job satisfaction. 
+This report focuses on several variables included in the survey in hopes of extracting vital information and building a comprehensive model for identifying factors contributing to developers’ job satisfaction. Furthermore, a datasheet^[A datasheet is located at: https://github.com/ray0130/job_satisfaction/blob/main/inputs/data/datasheet.pdf] has been created.
 
 The variable JobSat is this report’s focus response variable. It asks the respondent to identify their current job satisfaction by selecting one of the following levels: Very dissatisfied, Slightly dissatisfied, Neither satisfied nor dissatisfied, Slightly satisfied, Very satisfied. In this report, this variable is recoded into binary values, where Very dissatisfied and slightly dissatisfied were coded as 0, slightly satisfied and very satisfied were coded as 1, and neither satisfied nor dissatisfied was coded as NA and removed from the responses as it poses as a neutral response and does not provide further information for our interest. 
 	
@@ -282,14 +282,6 @@ grid.arrange(k1, k2, k3, k4, ncol=2, nrow=2)
 ```
 	
 The distributions of these variables can be seen in Figures \@ref(fig:fig1). We observe several instances where there are few responses selecting that option, such as the option "very dissatisfied" in both CarrerSatisfy and JobSatisfy, and "Other" in WorkLoc. 
-	
-<!-- In Figure __, it shows the distribution of the WorkLoc responses. There is a large proportion of respondents who responded with preferring working in office,  -->
-
-
-
-
-
-
 
 
 
@@ -432,24 +424,6 @@ From Figure \@ref(fig:fig5), it shows that 21.5% of the people who do not work r
 ```{r tab2, warning=FALSE, fig.cap="Model Exponentiated Coefficients", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
 ## FINAL MODEL
 
-# unique(factorized$satisfy)
-# as.numeric(factorized$satisfy)
-# 
-# factorized <- factorized %>% 
-# factorized$satisfy <- as.numeric(factorized$satisfy)
-# factorized$careersatisfy <- as.numeric(factorized$careersatisfy)
-# factorized$remote <- as.numeric(factorized$remote)
-# factorized$loc <- as.numeric(factorized$loc)
-# factorized$Compsize <- as.numeric(factorized$Compsize) 
-# 
-# train_data <- factorized %>% select(c("satisfy", "careersatisfy", "remote", "loc", "Compsize", "WorkLoc", "ConvertedComp"))
-# 
-# model_final <- glm(satisfy ~ careersatisfy + WorkLoc + remote + careersatisfy + Compsize, data=train_data, family = 'binomial')
-# 
-
-# summary(model_final)
-
-
 modelsummary(model_final, stars = FALSE, coef_omit = "Intercept", title = "Summary table of three multivariate models",
                            exponentiate = TRUE) %>% 
   add_header_above(c("model", ""), bold = T)
@@ -461,12 +435,9 @@ test$satisfy <- as.numeric(test$satisfy)
 test$careersatisfy <- as.numeric(test$careersatisfy)
 test$remote <- as.numeric(test$remote)
 test$Compsize <- as.numeric(test$Compsize) 
-# test$loc <- as.numeric(test$loc)
-# test$WorkLoc <- as.numeric(test$WorkLoc)
 
 
 pred <- predict(model_final, test)
-# pred_y <- case_when(pred)
 
 max_acc <- 0
 cutoff <- 0
@@ -480,7 +451,6 @@ for (i in 1:9){
   }
 }
 
-# which(pred_y == actual_y)
 
 pred_y <- case_when(pred > cutoff ~ "1", pred <= cutoff ~ "0")
 FINAL_acc <- length(which(pred_y == actual_y))/length(actual_y)
@@ -492,7 +462,6 @@ sensitivity$fn <- length(which(pred_y == "0" & actual_y == "1"))
 sensitivity$sensitive <- sensitivity$tp / (sensitivity$tp + sensitivity$fn)
 sensitivity$specificity <- sensitivity$tn / (sensitivity$fp + sensitivity$tn)
 
-# Anova(model_final)
 ```
 
 The fitted logistic regression model’s coefficient can be found in table \@ref(tab:tab2), which was produced using the package modelsummary[@modelsummary]. 
@@ -505,12 +474,7 @@ Invesgitating further, we found that the p-values for each of the predictors wer
 
 ```{r fig6, warning=FALSE, fig.cap="Predicted vs Actual Job Satisfaction grouped by Preferred Work Location", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
 # # Model Diagnostics
-# simulated_data <-
-#   augment(model_final,
-#           data = train_data,
-#           type.predict = "response")
 
-# simulated_data
 
 simulated_data %>%
   mutate(satisfy = factor(satisfy)) %>%
@@ -655,9 +619,6 @@ Despite these shortcomings, this report managed to identify some key aspects of 
 
 \newpage
 
-\appendix
-
-# Appendix {-}
 
 
 
