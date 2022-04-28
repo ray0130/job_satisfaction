@@ -1,0 +1,670 @@
+---
+title: "Happy Developer Happy Company"
+subtitle: "An analysis of the Stack Overflow Developer's Survey"
+author: 
+  - Ray Wen
+thanks: "Code and data are available at: ."
+date: "`r format(Sys.time(), '%d %B %Y')`"
+abstract: "In light of the Covid-19 pandemic, there have been many shifts in everyone's lifestyle and work-life balance which caused a rise in mental illness as addressed by the World Health Organization. This report analyzes the 2019 StackOverflow Developer's Survey and focuses on the factors influencing job satisfaction amongst developers. Factors such as gender, company size, work location, career satisfaction, and compensation are identified as significant factors that influence the developer's job satisfaction. Companies can utilize this information to reinforce and reallocate company resources to address employees who fit these brackets and improve their overall job satisfaction and mental health.\\par \\textbf{Keywords:} Job Satisfaction, Mental Health, Developer, Survey"
+output:
+  bookdown::pdf_document2
+toc: FALSE
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(dplyr)
+library(hrbrthemes)
+library(broom)
+library("gridExtra")
+library(kableExtra)
+library(modelsummary)
+library(pROC)
+
+raw <- read.csv("../../inputs/data/survey_results_public.csv")
+head(raw)
+set.seed(123)
+```
+
+```{r warning=FALSE, message = FALSE, echo=FALSE}
+## Creating Data Frame
+
+clean_full <- raw %>% select(c(WorkRemote, ConvertedComp, JobSat, SOVisitFreq, SOPartFreq, WorkLoc, CodeRevHrs, Age, Hobbyist, OrgSize, CareerSat, Gender, Country)) %>% na.omit()
+
+## 75% of the sample size
+smp_size <- floor(0.75 * nrow(clean_full))
+
+## set the seed to make your partition reproducible
+train_ind <- sample(seq_len(nrow(clean_full)), size = smp_size)
+
+clean <- clean_full[train_ind, ]
+test <- clean_full[-train_ind, ]
+
+test <- test %>% mutate(satisfy = case_when(
+  JobSat == "Slightly satisfied" ~ "1",
+  JobSat == "Slightly dissatisfied" ~ "0",
+  JobSat == "Very satisfied" ~ "1",
+  JobSat == "Neither satisfied nor dissatisfied" ~ "NA",
+  JobSat == "Very dissatisfied" ~ "0",
+)) %>% mutate(remote = case_when(
+  WorkRemote == "Less than once per month / Never" ~ "0",
+  WorkRemote == "A few days each month" ~ "0",
+  WorkRemote == "All or almost all the time (I'm full-time remote)" ~ "1",
+  WorkRemote == "More than half, but not all, the time" ~ "1",
+  WorkRemote == "Less than half the time, but at least one day each week" ~ "0",
+  WorkRemote == "About half the time" ~ "0",
+  WorkRemote == "It's complicated" ~ "NA",
+)) %>% mutate(satisfy = case_when(
+  JobSat == "Slightly satisfied" ~ "1",
+  JobSat == "Slightly dissatisfied" ~ "0",
+  JobSat == "Very satisfied" ~ "1",
+  JobSat == "Neither satisfied nor dissatisfied" ~ "NA",
+  JobSat == "Very dissatisfied" ~ "0",
+))%>% mutate(SOfreq = case_when(
+  SOVisitFreq == "I have never visited Stack Overflow (before today)" ~ "0",
+  SOVisitFreq == "Less than once per month or monthly" ~ "1",
+  SOVisitFreq == "A few times per month or weekly" ~ "2",
+  SOVisitFreq == "A few times per week" ~ "3",
+  SOVisitFreq == "Daily or almost daily" ~ "4",
+  SOVisitFreq == "Multiple times per day" ~ "5",
+))%>% mutate(SOPart = case_when(
+  SOPartFreq == "I have never participated in Q&A on Stack Overflow" ~ "0",
+  SOPartFreq == "Less than once per month or monthly" ~ "1",
+  SOPartFreq == "A few times per month or weekly" ~ "2",
+  SOPartFreq == "A few times per week" ~ "3",
+  SOPartFreq == "Daily or almost daily" ~ "4",
+  SOPartFreq == "Multiple times per day" ~ "5",
+)) %>% mutate(hobby=case_when(
+  Hobbyist == "Yes" ~ "1",
+  Hobbyist == "No" ~ "0"
+))%>% mutate(careersatisfy = case_when(
+  CareerSat == "Slightly satisfied" ~ "1",
+  CareerSat == "Slightly dissatisfied" ~ "0",
+  CareerSat == "Very satisfied" ~ "1",
+  CareerSat == "Neither satisfied nor dissatisfied" ~ "NA",
+  CareerSat == "Very dissatisfied" ~ "0",
+))%>% mutate(Compsize = case_when(
+  OrgSize == "Just me - I am a freelancer, sole proprietor, etc." ~ "0",
+  OrgSize == "2-9 employees" ~ "1",
+  OrgSize == "10 to 19 employees" ~ "2",
+  OrgSize == "20 to 99 employees" ~ "3",
+  OrgSize == "100 to 499 employees" ~ "4",
+  OrgSize == "500 to 999 employees" ~ "5",
+  OrgSize == "1,000 to 4,999 employees" ~ "6",
+  OrgSize == "5,000 to 9,999 employees" ~ "7",
+  OrgSize == "10,000 or more employees" ~ "8",
+)) %>% mutate(loc = case_when(
+  WorkLoc == "Office" ~ "0",
+  WorkLoc == "Other place, such as a coworking space or cafe" ~ "0",
+  WorkLoc == "Home" ~ "1",
+)) %>% filter(!remote=="NA") %>% filter(!satisfy=="NA") %>% filter(!SOfreq=="NA") %>% filter(!careersatisfy=="NA")
+
+
+factorized <- clean %>% mutate(remote = case_when(
+  WorkRemote == "Less than once per month / Never" ~ "0",
+  WorkRemote == "A few days each month" ~ "0",
+  WorkRemote == "All or almost all the time (I'm full-time remote)" ~ "1",
+  WorkRemote == "More than half, but not all, the time" ~ "1",
+  WorkRemote == "Less than half the time, but at least one day each week" ~ "0",
+  WorkRemote == "About half the time" ~ "0",
+  WorkRemote == "It's complicated" ~ "NA",
+)) %>% mutate(satisfy = case_when(
+  JobSat == "Slightly satisfied" ~ "1",
+  JobSat == "Slightly dissatisfied" ~ "0",
+  JobSat == "Very satisfied" ~ "1",
+  JobSat == "Neither satisfied nor dissatisfied" ~ "NA",
+  JobSat == "Very dissatisfied" ~ "0",
+))%>% mutate(SOfreq = case_when(
+  SOVisitFreq == "I have never visited Stack Overflow (before today)" ~ "0",
+  SOVisitFreq == "Less than once per month or monthly" ~ "1",
+  SOVisitFreq == "A few times per month or weekly" ~ "2",
+  SOVisitFreq == "A few times per week" ~ "3",
+  SOVisitFreq == "Daily or almost daily" ~ "4",
+  SOVisitFreq == "Multiple times per day" ~ "5",
+))%>% mutate(SOPart = case_when(
+  SOPartFreq == "I have never participated in Q&A on Stack Overflow" ~ "0",
+  SOPartFreq == "Less than once per month or monthly" ~ "1",
+  SOPartFreq == "A few times per month or weekly" ~ "2",
+  SOPartFreq == "A few times per week" ~ "3",
+  SOPartFreq == "Daily or almost daily" ~ "4",
+  SOPartFreq == "Multiple times per day" ~ "5",
+)) %>% mutate(hobby=case_when(
+  Hobbyist == "Yes" ~ "1",
+  Hobbyist == "No" ~ "0"
+))%>% mutate(careersatisfy = case_when(
+  CareerSat == "Slightly satisfied" ~ "1",
+  CareerSat == "Slightly dissatisfied" ~ "0",
+  CareerSat == "Very satisfied" ~ "1",
+  CareerSat == "Neither satisfied nor dissatisfied" ~ "NA",
+  CareerSat == "Very dissatisfied" ~ "0",
+))%>% mutate(Compsize = case_when(
+  OrgSize == "Just me - I am a freelancer, sole proprietor, etc." ~ "0",
+  OrgSize == "2-9 employees" ~ "1",
+  OrgSize == "10 to 19 employees" ~ "2",
+  OrgSize == "20 to 99 employees" ~ "3",
+  OrgSize == "100 to 499 employees" ~ "4",
+  OrgSize == "500 to 999 employees" ~ "5",
+  OrgSize == "1,000 to 4,999 employees" ~ "6",
+  OrgSize == "5,000 to 9,999 employees" ~ "7",
+  OrgSize == "10,000 or more employees" ~ "8",
+)) %>% mutate(loc = case_when(
+  WorkLoc == "Office" ~ "0",
+  WorkLoc == "Other place, such as a coworking space or cafe" ~ "0",
+  WorkLoc == "Home" ~ "1",
+))
+
+factorized <- factorized %>% filter(!remote=="NA") %>% filter(!satisfy=="NA") %>% filter(!SOfreq=="NA") %>% filter(!careersatisfy=="NA")
+
+
+```
+
+```{r warning=FALSE, message = FALSE, echo=FALSE}
+# RENAMING COLUMNS FOR PLOTTING
+
+factorized$location_desc <- factorized$WorkLoc
+factorized$location_desc[factorized$location_desc == "Other place, such as a coworking space or cafe"] <- "Other"
+
+factorized$sat_desc[factorized$satisfy == "0"] <- "Unsatisfied"
+factorized$sat_desc[factorized$satisfy == "1"] <- "Satisfied"
+
+factorized$career_desc[factorized$careersatisfy == "0"] <- "Unsatisfied"
+factorized$career_desc[factorized$careersatisfy == "1"] <- "Satisfied"
+```
+
+
+# Introduction
+
+As mental health conditions continue to increase worldwide, development and improvements have continuously been made to address this issue [@WHO]. As the Canadian Mental Health Association addresses, individuals are more likely to develop a mental illness during times of stress, which can be part of many people's jobs [@cmha]. As the never-ending pandemic continues to transform people's lives and careers, some may find it difficult to adapt to this new environment. This may pose a greater threat to mental illness in the workplace. Workplaces have been shifting from offices to people's homes and have caused many to suffer from loneliness and the loss of work-life balance. Consequently, many organizations have been encouraging employers to develop strategies and resources for employees to improve their mental health such as the "Working towards mental wellness" toolkit from the Ontario, Chamber of Commerce [@occ].
+
+This report focuses on developers^[The term "developer" is defined as people who code] and explores the factors that may contribute to their satisfaction with their current job (or the job they currently spend the most time on) through a survey conducted by Stack Overflow. More information regarding the survey can be found in Section \@ref(data) and Section \@ref(results) This report investigates factors such as work location, gender, experience as a developer, compensation, etc, and their influence on the developers' job satisfaction.
+
+This report identifies several factors that are significant factors on the developers job satisfaction. In Section \@ref(results), the report discovers that there is a slight decrease in job satisfaction for developers who identify as non-binary, gender queer, or gender non-conforming and developers who work mostly in offices compared to working from home. Furthermore, there is a great positive association between overall career satisfaction and job satisfaction. The results also show developers with a slightly higher compensation or a smaller company size are more likely to be satisfied with their jobs.
+
+With these significant factors in mind, companies can direct their attention and resources to these factors and improve on their employee's work life balance. This would greatly help developer's mental health and ease the transition due to the Covid-19 Pandemic.
+
+
+
+
+# Data
+
+In order to gain a better understanding of developers’ job satisfaction, this report considers the 2019 StackOverflow Developer’s Survey and attempts to identify key factors that make them satisfied with their current occupation. Furthermore, the survey from the year 2019 was selected as it contains more variables of interest such as “Work remote” and “Work Location” variables that identify the set of the developer’s workspace. Utilizing the 2019 data that was conducted prior to the Covid-19 pandemic also provides a better distribution of the working location as the pandemic has shifted working locations from the usual office to mostly remote work [@sofsurvey]. 
+
+Using R Statistical Programming Language [@citeR], the packages dpylr[@dplyr], tidyverse[@citetidyverse], hrbrthemes[@theme], and broom[@broom], this report is able to conduct exploratory analysis and fit a logistic regression model, categorizing the characteristics of developers who are satisfied with their jobs and those who are not. Furthermore, data visualizations, such as tables and graphs are made by using ggplot2 [@citeggplot2], modelsummary[@modelsummary], gridExtra[@gridExtra], and kableExtra[@kableExtra]. Finally, the report was compiled using knitr [@citeknitr]
+
+
+## Source
+
+The 2019 StackOverflow Developer’s Survey is a survey that was conducted by StackOverflow, an online public platform that allows users to ask and answer questions [@sofsurvey].  The StackOverflow Developer’s survey is one of the largest and most comprehensive surveys conducted annually to gain insight of the developers’ favorite technological tools, such as programming languages and frameworks, to their job status and satisfaction, and this survey has been conducted since 2010, making the 2019 edition the ninth year of this survey. The survey obtained 88,883 responses from 179 different countries all around the world. Approximately 400 responses were discarded from the survey as the respondents spend less than 3 minutes completing the survey, which was expected to take respondents around 20 minutes to complete and the median of the time spent on the survey for qualified responses was 23.2 minutes.
+
+This survey was open to responses from January 23 to February 14 and it is accessible through multiple media such as banner ads, blog posts, email lists, etc. As these medians are all owned by StackOverflow, they have noted that it is possible that the respondents to this survey are more likely to be highly engaged and active users on StackOverflow as they are more likely to notice the survey and begin. Furthermore, as an incentive for users to respond to this survey, StackOverflow has offered badges upon completion of the survey to the user's profile. 
+
+```{r tab1, warning=FALSE, fig.cap="Respondent Country Distribution", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
+## EDA COUNTRY
+countryPercent <- c()
+countryCount <- c()
+countryCount <- clean %>% count(Country, sort = TRUE)
+countryCount$percent <- countryCount$n / sum(countryCount$n)
+# countryCount <-sort(names)
+countryPercent <- countryCount %>% select(Country, percent)
+countryPercent <- as.data.frame(countryPercent)
+final_country_percent <- c()
+final_country_percent$Country <- countryPercent$Country[1:10]
+final_country_percent$percent <- countryPercent$percent[1:10]
+
+final_country_percent$Country <- append(final_country_percent$Country, "other")
+final_country_percent$percent <- append(final_country_percent$percent, 1-sum(final_country_percent$percent))
+final_country_percent <- as.data.frame(final_country_percent)
+
+
+## KNIT KABLE THIS TABLE
+final_country_percent %>%
+  knitr::kable(col.names = c(
+                             "Country",
+                             "Percentage"),
+               booktabs = TRUE,
+               escape = FALSE,
+               caption = "Distributions of Countries"
+  ) %>%
+  column_spec(1:2, width = "4em") %>%
+  kableExtra::kable_styling()
+
+
+```
+
+
+Although as comprehensive as this survey may be, the creators of the survey have highlighted the fact that due to regulations and sanctions by the United States Government, several countries such as Crimea, Cuba, Iran, North Korea, and Syria were unable to access the survey software. Although some respondents managed to utilize VPN to access the survey, StackOverflow has noted that this limitation should still be kept in mind when interpreting results as the results may not be representative of these countries. A summary of the top 10  respondent's countries could be seen in Table \@ref(tab:tab1). 
+
+Furthermore, StackOverflow also highlighted that, although they continue to improve the representation of all ethnicities and racial groups, they acknowledge that this survey may not be evenly representative of everyone in the developer’s community. Thus, analysis of this data should also be aware of this shortcoming and highlight results for underrepresented racial and ethnic groups. 
+
+## Variable of Interest
+
+This report focuses on several variables included in the survey in hopes of extracting vital information and building a comprehensive model for identifying factors contributing to developers’ job satisfaction. 
+
+The variable JobSat is this report’s focus response variable. It asks the respondent to identify their current job satisfaction by selecting one of the following levels: Very dissatisfied, Slightly dissatisfied, Neither satisfied nor dissatisfied, Slightly satisfied, Very satisfied. In this report, this variable is recoded into binary values, where Very dissatisfied and slightly dissatisfied were coded as 0, slightly satisfied and very satisfied were coded as 1, and neither satisfied nor dissatisfied was coded as NA and removed from the responses as it poses as a neutral response and does not provide further information for our interest. 
+	
+The other variables that we took into consideration for our analysis were WorkLoc, WorkRemote, CareerSat, and OrgSize:
+	
+The variable WorkRemote contains the respondent’s current frequency of working remotely. The respondent can choose from a once per month/Never, Half of the time, to Almost all the time/Always. These values are encoded as 0 or 1 with less than once a month, a few days each month, less than half of the time, and half of the time working remotely encoded as 0, and the remaining are encoded as 1. Furthermore, the response "It's complicated" is discarded from the dataset as it provides no information regarding the context. 
+	
+The variable WorkLoc contains the respondent’s preferred workspace. It contains values “Office”, “Home”, or "Other places, such as a coworking space or cafe". These values are kept as categorical values. Note that this variable is different from the “WorkRemote” variable as this asks the respondent’s preferred work location instead of their current status.
+	
+The variable CareerSat is similar to the variable JobSat, but instead of asking the respondent about their current job satisfaction, this variable asks about the respondents’ satisfaction with their overall career as a whole, including previous jobs and titles. It is encoded in the same fashion as JobSat and the response “neither satisfied nor dissatisfied” was also encoded as NA and removed from the responses. 
+	
+Finally, the variable OrgSize illustrates the respondent’s current employed company size. It contains a few ranges of the total number of employees and these values are encoded as numbers with 0 being a freelancer or just one person, and 8 as "10,000 or more employees" in increasing order. 
+
+```{r fig1, warning=FALSE, fig.cap="Summary of US GSS Variables", message = FALSE, echo=FALSE, fig.width=15, fig.height=8}
+
+# Wrap X label from StackOverflow:
+# https://stackoverflow.com/questions/21878974/wrap-long-axis-labels-via-labeller-label-wrap-in-ggplot2
+
+k1 <- clean %>% ggplot()+
+  geom_bar(aes(x=WorkLoc))+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+
+k2 <- clean %>% ggplot()+
+  geom_bar(aes(x=JobSat))+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+
+k3 <- clean %>% ggplot()+
+  geom_bar(aes(x=CareerSat))+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+
+k4 <- clean %>% ggplot()+
+  geom_bar(aes(x=OrgSize))+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+  scale_fill_brewer(palette = "Spectral")
+
+grid.arrange(k1, k2, k3, k4, ncol=2, nrow=2)
+
+```
+	
+The distributions of these variables can be seen in Figures \@ref(fig:fig1). We observe several instances where there are few responses selecting that option, such as the option "very dissatisfied" in both CarrerSatisfy and JobSatisfy, and "Other" in WorkLoc. 
+	
+<!-- In Figure __, it shows the distribution of the WorkLoc responses. There is a large proportion of respondents who responded with preferring working in office,  -->
+
+
+
+
+
+
+
+
+
+
+# Model
+
+As the response variable, this report is attempting to model is the variable JobSat, and that it has been transformed into a binary variable as described in Section \@ref(data), the use of Binary Logistic Regression is suitable in this situation. Using the variables WorkLoc, WorkRemote, CareerSat, and OrgSize as predictors with the transformation described above, the model assumes:
+
+	[MODEL HERE]
+$$  P(Y | X) = \frac{1}{1 + e^{-(B_0 + B_1x_1 + B_2x_2 + B_3x_3 + B_4x_4)}} = \frac{1}{1+e^{-(\text{WorkLoc} \cdot x_1 + \text{WorkRemote} \cdot x_2 + \text{CareerSat} \cdot x_3 + \text{OrgSize} \cdot x_4)}}  $$
+	
+	
+As Logistic Regression does not make some of the assumptions that Linear Regressions do, it brings great benefits to this model as it would be difficult to ensure all the assumptions are met. For example, Logistic Regression does not require the dependent and independent variables to be in a linear relationship, which greatly benefits the transformed data as it is difficult to check if two binary variables are in a linear relationship. 
+
+However, Logistic Regression does require some assumptions to be addressed. It requires each observation to be independent of the others. This is met as each StackOverflow user can only submit one survey response, therefore, there are no relationships between each surveyed response. Furthermore, after cleaning the null responses and invalid responses for each variable, the cleaned dataset still consists of around 20,000 responses. This is a considerably large sample size that allows the Logistic Regression to perform well.
+
+```{r fig2, warning=FALSE, fig.cap="Residual Plots and predicted values plot", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
+
+# Model
+
+factorized$satisfy <- as.numeric(factorized$satisfy)
+factorized$careersatisfy <- as.numeric(factorized$careersatisfy)
+factorized$remote <- as.numeric(factorized$remote)
+factorized$loc <- as.numeric(factorized$loc)
+factorized$Compsize <- as.numeric(factorized$Compsize) 
+
+train_data <- factorized %>% select(c("satisfy", "careersatisfy", "remote", "loc", "Compsize", "WorkLoc", "ConvertedComp"))
+
+model_final <- glm(satisfy ~ careersatisfy + WorkLoc + remote + careersatisfy + Compsize, data=train_data, family = 'binomial')
+
+
+
+# Model Diagnostics
+simulated_data <-
+  augment(model_final,
+          data = train_data,
+          type.predict = "response")
+
+## Diagnostic plot
+d1 <- ggplot(simulated_data, 
+       aes(x = .resid)) + 
+  geom_histogram(binwidth = 1) +
+  theme_classic() +
+  labs(y = "Number of occurrences",
+       x = "Residuals")
+
+d2 <- ggplot(simulated_data, 
+       aes(x = WorkLoc, y = .resid)) + 
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dotted", color = "grey") +
+  theme_classic() +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+  labs(y = "Residuals",
+       x = "Desired Work Location")
+
+d3 <- ggplot(simulated_data, 
+       aes(x = Compsize, y = .resid)) + 
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dotted", color = "grey") +
+  theme_classic() +
+  labs(y = "Residuals",
+       x = "Company Size")
+
+d4 <- ggplot(simulated_data, 
+       aes(x = satisfy, y=.fitted)) + 
+  geom_point() +
+  theme_classic() +
+  geom_abline(slope=1, intercept=0)+
+  labs(y = "Estimated Job Satisfaction",
+       x = "Actual Job Satisfaction")
+
+grid.arrange(d1, d2, d3, d4, ncol=2, nrow=2)
+
+```
+
+The data is first simulated by using the library broom's augment function. It is then fed into the model for prediction and diagnostics.
+
+After feeding in the simulated data into the binary logistic regression, the residual are plotted to verify the model.
+
+In Figure \@ref(fig:fig2), it shows the models residuals distribution and the residuals vs. each predictor variables. From the histogram on the top left plot, it shows that the residuals are approximately normally distributed. Furthermore, in the top right plot and bottom left plot, the residuals plotted against the predictor variables Preferred Work Location and Company Size showed that there are no relationship between the residuals and the predictor variables. The residuals seems to be scattered all around without a particular pattern. 
+
+Finally, the bottom right plot shows the estimated job satisfaction probability plotted against the actual job satisfaction value in the dataset. The line $y = x$ is plotted as the solid black line to provide information on the ideal predictions are. In the plot, there are many points close to the ideal line, located in the bottom left corner and the top right corner. However, there are also many points that lie far away from the line. As the scattered plot is difficult to interpret the percentage of incorrect predictions due to a relatively large dataset, further investigations are conducted to show the actual performance of the model.
+
+This report will explore each of the independent variables in Section \@ref(results) to visualize the relationship between each variable and the dependent variable job satisfaction.
+
+
+# Results
+
+This report first focuses on exploring the relationship between each variable with the variable JobSat. This is done by producing bar graphs using ggplot[@citeggplot2] with the transformed data. These graphs are meant to provide a better understanding of how influential these variables are to the developers’ satisfaction of their occupation in hopes of helping us interpret and explain the Logistic Regression model that is produced.
+
+
+```{r fig3, warning=FALSE, fig.cap="Job Satisfaction and Preferred Work Location", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
+
+
+factorized %>% ggplot(aes(x= as.factor(sat_desc),  group=location_desc)) +
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  geom_text(aes( label = scales::percent(..prop..),
+                 y= ..prop.. ), stat= "count", vjust = -.5) +
+  labs(y = "Percent", x = 'Job Satisfaction', title = 'Job Satisfaction vs. work type') +
+  facet_grid(~location_desc) +
+  scale_y_continuous(labels = scales::percent) + theme(legend.position="none") + scale_fill_brewer(palette = "RdGy")
+
+
+```
+
+From Figure \@ref(fig:fig3), we can see that 23.6% of the people who prefer working at home are not satisfied with their current jobs. There is a slight decrease in dissatisfaction in people who prefer working in an office with 18.1% dissatisfied with their current job status. Finally, there is a noticeably large proportion of 30.8% people who prefer working at a co-working space who are not satisfied with their jobs.
+
+
+```{r fig4, warning=FALSE, fig.cap="Job Satisfaction and Career Satisfaction", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
+
+factorized %>% filter(!is.na(satisfy), !is.na(careersatisfy)) %>% ggplot(aes(x= sat_desc,  group=career_desc)) +
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  geom_text(aes( label = scales::percent(..prop..),
+                 y= ..prop.. ), stat= "count", vjust = -.5) +
+  labs(y = "Percent", x = 'Job Satisfaction', title = 'Job Satisfaction vs. Career Satisfaction') +
+  facet_grid(~career_desc) +
+  scale_y_continuous(labels = scales::percent) + theme(legend.position="none") + scale_fill_brewer(palette = "RdGy")
+```
+
+From Figure \@ref(fig:fig4), there is a clear relationship between career and job satisfaction. 80.7% the people who are unsatisfied with their career are also unsatisfied with their current job and 88.9% of the people who are satisfied with their career are also satisfied with their current job.
+
+```{r fig5, warning=FALSE, fig.cap="Job Satisfaction and Remote Work", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
+
+# Job Sat vs Remote
+
+factorized %>% filter(!is.na(satisfy), !is.na(careersatisfy)) %>% ggplot(aes(x= sat_desc,  group=remote)) +
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  geom_text(aes( label = scales::percent(..prop..),
+                 y= ..prop.. ), stat= "count", vjust = -.5) +
+  labs(y = "Percent", x = 'Working Remotely', title = 'Job Satisfaction vs. Working Remotely') +
+  facet_grid(~remote) +
+  scale_y_continuous(labels = scales::percent) + theme(legend.position="none") + scale_fill_brewer(palette = "RdGy")
+```
+
+From Figure \@ref(fig:fig5), it shows that 21.5% of the people who do not work remotely more than half of the time in their job are unsatisfied with their current occupation and 18.2% of the people who work remotely more than half of the time in their job are unsatisfied with their current occupation.
+
+
+
+
+```{r tab2, warning=FALSE, fig.cap="Model Exponentiated Coefficients", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
+## FINAL MODEL
+
+# unique(factorized$satisfy)
+# as.numeric(factorized$satisfy)
+# 
+# factorized <- factorized %>% 
+# factorized$satisfy <- as.numeric(factorized$satisfy)
+# factorized$careersatisfy <- as.numeric(factorized$careersatisfy)
+# factorized$remote <- as.numeric(factorized$remote)
+# factorized$loc <- as.numeric(factorized$loc)
+# factorized$Compsize <- as.numeric(factorized$Compsize) 
+# 
+# train_data <- factorized %>% select(c("satisfy", "careersatisfy", "remote", "loc", "Compsize", "WorkLoc", "ConvertedComp"))
+# 
+# model_final <- glm(satisfy ~ careersatisfy + WorkLoc + remote + careersatisfy + Compsize, data=train_data, family = 'binomial')
+# 
+
+# summary(model_final)
+
+
+modelsummary(model_final, stars = FALSE, coef_omit = "Intercept", title = "Summary table of three multivariate models",
+                           exponentiate = TRUE) %>% 
+  add_header_above(c("model", ""), bold = T)
+
+
+actual_y <- as.numeric(test$satisfy)
+
+test$satisfy <- as.numeric(test$satisfy)
+test$careersatisfy <- as.numeric(test$careersatisfy)
+test$remote <- as.numeric(test$remote)
+test$Compsize <- as.numeric(test$Compsize) 
+# test$loc <- as.numeric(test$loc)
+# test$WorkLoc <- as.numeric(test$WorkLoc)
+
+
+pred <- predict(model_final, test)
+# pred_y <- case_when(pred)
+
+max_acc <- 0
+cutoff <- 0
+
+for (i in 1:9){
+  pred_y <- case_when(pred > i/10 ~ "1", pred <= i/10 ~ "0")
+  acc <- length(which(pred_y == actual_y))/length(actual_y)
+  if (acc > max_acc){
+    cutoff <- i/10
+    max_acc <- acc
+  }
+}
+
+# which(pred_y == actual_y)
+
+pred_y <- case_when(pred > cutoff ~ "1", pred <= cutoff ~ "0")
+FINAL_acc <- length(which(pred_y == actual_y))/length(actual_y)
+sensitivity <- c()
+sensitivity$tp <- length(which(pred_y == "1" & actual_y == "1"))
+sensitivity$tn <- length(which(pred_y == "0" & actual_y == "0"))
+sensitivity$fp <- length(which(pred_y == "1" & actual_y == "0"))
+sensitivity$fn <- length(which(pred_y == "0" & actual_y == "1"))
+sensitivity$sensitive <- sensitivity$tp / (sensitivity$tp + sensitivity$fn)
+sensitivity$specificity <- sensitivity$tn / (sensitivity$fp + sensitivity$tn)
+
+# Anova(model_final)
+```
+
+The fitted logistic regression model’s coefficient can be found in table \@ref(tab:tab2), which was produced using the package modelsummary[@modelsummary]. 
+
+Since it is a logistic regression model, the coefficients are exponentiated to provide a clearer description of the model.
+
+It follows that the coefficient represents the logits of when the variable is true for binary variables, such as careersatisfy, WorkLocOffice, WorkLocOther place, and remote. and for discrete variables such as Compsize, the coefficients represent the amount of logits increased as the variable increases in 1 unit.
+
+Invesgitating further, we found that the p-values for each of the predictors were all small and less than 0.001. This shows that each of the predictors are statistically significant when estimating the dependent variable, job satisfaction.
+
+```{r fig6, warning=FALSE, fig.cap="Predicted vs Actual Job Satisfaction grouped by Preferred Work Location", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
+# # Model Diagnostics
+# simulated_data <-
+#   augment(model_final,
+#           data = train_data,
+#           type.predict = "response")
+
+# simulated_data
+
+simulated_data %>%
+  mutate(satisfy = factor(satisfy)) %>%
+  ggplot(aes(x = WorkLoc,
+             y = .fitted,
+             color = satisfy)) +
+  geom_jitter(width = 0.01, height = 0.01) +
+  labs(x = "Work Location",
+       y = "Estimated probability satisfied with Job",
+       color = "Actually Satisfied with Job") +
+  theme_classic() +
+  scale_color_brewer(palette = "Set1")+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+
+
+```
+
+
+Using the simulated data set, we then conduct tests on our model to interpret the overall performance and sensitivity analysis. From figure \@ref(fig:fig6), we see a scattered plot with the predicted and actual values of job satisfaction grouped by the independent variable desired work location. In our case, due to our encoding, a predicted value of close to 1 indicates that the simulated observation is satisfied with their job, and a value close to 0 indicates that the simulated observation is not satisfied with their job. 
+
+Observing the plot, we can see that our model separates the simulated data well as the points with an actual job satisfaction value of 1 mostly have a predicted value close to 1, and the points with an actual job satisfaction value of 0 mostly have a predicted value close to 0. 
+
+There are of course a few exceptions that lie within the wrong desired region. However, due to a large simulated data size, we are unable to fully interpret the false positives (actual value of 0 with a predicted value close to 1) and the false negatives (actual value of 1 with a predicted value close to 0) of our predictions.
+
+
+```{r fig7, warning=FALSE, fig.cap="ROC Curve", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
+# ROC Curve
+pred_y <- case_when(simulated_data$.fitted > 0.5 ~ "1", simulated_data$.fitted <= 0.5 ~ "0")
+actual_y <- factor(simulated_data$satisfy)
+FINAL_acc <- length(which(pred_y == actual_y))/length(actual_y)
+plot(roc(as.numeric(actual_y), as.numeric(pred_y), direction="<"),
+     col="yellow", lwd=3, main="ROC Curve of Model", xlim=c(1, 0))
+```
+
+
+Therefore, we have also conducted a sensitivity test, where we take the simulated predictions and calculated the sensitivity, specificity, and accuracy of the predictions. 
+
+We first produced the ROC Curve of the model with the simulated data using the pROC Package[@proc] as shown in figure \@ref(fig:fig7) to further generalize and visualize our model's performance, Observing the ROC Curve, there is a clear corner on the curve that shows the best choice of cutoff value where it obtains a high sensitivity rate and a specificity rate around 0.5.
+
+
+```{r tab4, warning=FALSE, fig.cap="Sensitivity Analysis Table", message = FALSE, echo=FALSE, fig.width=5, fig.height=5}
+## Sensitivity Analysis
+
+sensitivity <- c()
+sensitivity$tp <- length(which(pred_y == "1" & actual_y == "1"))
+sensitivity$tn <- length(which(pred_y == "0" & actual_y == "0"))
+sensitivity$fp <- length(which(pred_y == "1" & actual_y == "0"))
+sensitivity$fn <- length(which(pred_y == "0" & actual_y == "1"))
+sensitivity$sensitive <- sensitivity$tp / (sensitivity$tp + sensitivity$fn)
+sensitivity$specificity <- sensitivity$tn / (sensitivity$fp + sensitivity$tn)
+sensitivity$accuracy <- (sensitivity$tn + sensitivity$tp)  / (sensitivity$fp + sensitivity$tn + sensitivity$tp + sensitivity$fn)
+
+sensitivity <- as.data.frame(sensitivity)
+sensitivity %>%
+  knitr::kable(col.names = c(
+                             "True Positive",
+                             "True Negative",
+                             "False Positive",
+                             "False Negative",
+                             "Sensitivity",
+                             "Specificity",
+                             "Accuracy"),
+               booktabs = TRUE,
+               escape = FALSE,
+               caption = "Distributions of Countries"
+  ) %>%
+  column_spec(1:7, width = "4em") %>%
+  kableExtra::kable_styling()
+
+```
+
+
+
+We first processed the predicted values with a cutoff threshold of 0.5 as indicated in the ROC Curve, meaning that predicted values greater than 0.5 are considered as 1 and predicted values less than or equal to 0.5 are considered as 0. Then we calculated the True Positives (TP), True Negatives (TN), False Positives (FP), and False Negatives (FN).
+
+The sensitivity, specificity, and accuracy are calculated according to the following formuals:
+
+$$ \text{sensitivity} = \frac{TP}{TP + FN}$$
+$$ \text{specificity} = \frac{TN}{TN + FP}$$
+$$ \text{accuracy} = \frac{TP + TN}{TP + TN + FP + FN}$$
+
+From Table \@ref(tab:tab4), the overall sensitivity is around 0.97, the specificity is around 0.54, and the accuracy is around 0.88. 
+
+
+
+# Discussion
+
+
+## Model Interpretation and Analysis
+model interpretation, sensitivity analysis, simulated outcome analysis
+
+From Table \@ref(tab:tab2), we see a list of coefficients associated with each predictor variable. Most notably, we can see that the variable CareerSatisfy has a large impact on the respondent's current job satisfaction as it has a exponentiated coefficient of approximately 30. other more influential factors are WorkLocOffice and remote, with a coefficient of approximately 1.7. Other smaller influential factors are WorkLocOther and Compsize, which only have a coefficient of less than 1. Furthermore, we observe that all of the predictor values are statistically significant with a p-value of less than 0.001. This means that each of these predictors are influential in the job satisfaction of the individual. Therefore, from the coefficients, we can easily observe the influential ranking of each predictors.
+
+From Table \@ref(tab:tab4) and Figure \@ref(fig:fig7), we see that our model was able to achieve a relatively high sensitivity rate of 0.97. This means that our model performs well in predicting the respondents being satisfied with their jobs. However, we have obtained a mediocre specificity rate of 0.54. This shows that our model does not perform well in predicting the respondents being unsatisfied with their jobs.
+
+From Figure \@ref(fig:fig6) and Table \@ref(tab:tab4), with an accuracy of 0.87, we can now explain that our plot for simulated results is showing a correct visualization of our predictions, with most of the points lying close to their actual value. 
+
+## Preferred Work Location
+
+From Figure \@ref(fig:fig3), it can easily be identified that respondents who prefer to work at other places such as a coworking space have a higher unsatisfied proportion. After investigating the cleaned data, we have found several explanations to this phenomenon. 
+
+The number of observations where respondents respondent with preferring "Others, such as a coworking space" work location only consist of approximately 8% of the entire dataset. This is considerably small seeing as there is only 3 options for this variable to choose from. This may lead to unknown sampling bias or other external factors underlying each respondents responses. 
+
+This report proposes to transform this question in the survey from a single choice to multiple choice. We believe that this will not only increase the number of responses choosing this option, but also gain more information on reach respondent's ranking of their preferred working location. With this extra option, more information may be inferred from each responses by grouping each respondents top choices category such as grouping "Home" and "Coworking space" as "Out of Office" or "Non restricted work space."
+
+Furthermore, this report also encourages future reports to perform resampling orsimulate more data with the options "Others" as their preferred working location in attempt to reduce potential biased results or to verify that the responses in this survey accurately portrays the notion of people choosing "Others" as their preferred working location are more likely to be unsatisfied with their current location. 
+
+From another survey conducted by Slack, a online business communication platform, they found that 72% of the people prefer a hybrid mode of working location.[@slack] This shows that people are more likely to prefer a wide range of working locations to choose from. With this, we believe that many respondents who chooses "Others" may have similar mindset of wanting to have multiple working locations. COnsequently, if these respondents currently work in office but prefer a different working location, they are more likely to be unsatisfied with their current occupations.
+
+Therefore, this result informs that the worker's location preference is extremely important and that if developers have their freedom in choosing whether or not they want to go into the office to work, they are more likely to be satisfied with their jobs.
+
+
+
+
+## Impactful Factors
+
+From Figure \@ref(fig:fig5), we see that there is a slight increase in job dissatisfaction rate for people who are not working remote more than half of their time. A similar trend can be found in the model in Table \@ref(tab:tab2) where the coefficient for remote has a logit of 1.7 with a statistically significant p-value. This coefficient shows that the satisfaction rate will increase if the respondent works more than half of their time on their job. 
+
+This finding aligns with the article that Apollo Technical posted. [@apollo] In this article, they have analyzed the survey conducted by the Becker Friedman Institute for Economics at the University of Chicago, which sampled over 10,000 respondents regarding their work status such as remote work, and their feelings about it. They have reported that over 22% of the workers are happier when transitioning to remote work compared to those workers who always work in an onsite office environment. They also reported that these remote workers feel less stress, better focus, and better overall productivity when working remotely despite the fact that these remote workers worked over 43% more overtimes compared to onsite workers. 
+
+This links to an article by ZDNet, where they surveyed and investigated developers in attempt to pin point the important factors that makes a developer wanting to stay in their job[@zdnet]. In this article, they have reported a surprising result that the compensation was not in the top 3 important factors. Normally, one great incentive for workers is the compensation as it offers them more financial freedom and a quantified measure for their recognition and importance to the team [@quartz]. 
+
+This also reflects to the analysis in this report. In the early stages of investigating, this report finds that the compensation amount reported for developers is not associated to minute association with the developer's job satisfaction. Furthermore, the convertedcomp variable, which holds the value of the developer's salary converted into United States Dollars, was not even statistically significant when taking as a predictor variable in a Logistic Regression Model. 
+
+Furthermore, the article by ZDNet also reported that productivity and a stable work-life balance was the most influential factors that is keeping developers in their current occupation. This is expected as our model also have shown that preferred work location and working setting is influential in terms of determining the developer's job satisfaction. 
+
+Overall, as contrarary to popular belief, the most important factor for developers' in their occupation is not their overall compensation, but instead their work-life balance and their ability to make an impact. 
+
+
+## Weaknesses and next steps
+
+
+This report and survey undoubtedly have areas to improve in to obtain a more comprehensive view of the developer's job satisfaction factors. The distribution of each responses as seen in Section \@ref(data) may pose as a threat to our analysis.
+
+As mentioned in Section 5.2, there are several ways proposed to improve the survey. Methods have also been proposed in the same section to account for the lack of samples in certain responses. 
+
+Despite these shortcomings, this report managed to identify some key aspects of a developer's job that would improve the livelihood of the developer. Work setting flexibility and the option of remote work, in this report, acts as the greatest influential factor. Incorporating several existing articles, this report verifies their claims and reinforces the importance of these factors. Thus, corporations who wishes to improve their working standards and provide a happier working environment for their employees are encouraged to follow the guidelines in this report and hopefully make working easier and happier for developers.
+
+
+
+
+
+\newpage
+
+\appendix
+
+# Appendix {-}
+
+
+
+
+\newpage
+
+
+# References
+
+
